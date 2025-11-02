@@ -1,0 +1,57 @@
+erDiagram
+    activity_category ||--o{ activity_type : "categorizes"
+    activity_type ||--o{ activity_subtype : "has"
+    activity_type ||--o{ activity_type_metric_template : "defines"
+    unit ||--o{ activity_type_metric_template : "uses"
+    unit ||--o{ activity_metric : "measures"
+    app_user ||--o{ activity_session : "performs"
+    activity_session }|--o{ activity_metric : "records"
+    activity_type ||--o{ activity_session : "is"
+    activity_subtype ||--o{ activity_session : "is"
+
+    activity_category {
+        int id PK
+        string name
+        text description
+    }
+    activity_type {
+        int id PK
+        string name
+        int category_id FK
+        boolean is_physical
+        boolean has_duration
+    }
+    activity_subtype {
+        int id PK
+        int activity_type_id FK
+        string name
+    }
+    unit {
+        int id PK
+        string name
+        string symbol
+    }
+    app_user {
+        int id PK
+        string username
+    }
+    activity_session {
+        int id PK
+        int user_id FK
+        int activity_type_id FK
+        timestamp started_at
+        int duration_minutes
+    }
+    activity_metric {
+        int id PK
+        int session_id FK
+        string metric_name
+        decimal metric_value_numeric
+        int unit_id FK
+    }
+    activity_type_metric_template {
+        int id PK
+        int activity_type_id FK
+        string metric_name
+        int unit_id FK
+    }
