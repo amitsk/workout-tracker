@@ -1,57 +1,433 @@
 erDiagram
-    activity_category ||--o{ activity_type : "categorizes"
-    activity_type ||--o{ activity_subtype : "has"
-    activity_type ||--o{ activity_type_metric_template : "defines"
-    unit ||--o{ activity_type_metric_template : "uses"
-    unit ||--o{ activity_metric : "measures"
+    %% Core User & Activity Hierarchy
     app_user ||--o{ activity_session : "performs"
-    activity_session }|--o{ activity_metric : "records"
-    activity_type ||--o{ activity_session : "is"
-    activity_subtype ||--o{ activity_session : "is"
+    app_user ||--o{ user_goal : "sets"
+    app_user ||--o{ user_body_metric : "tracks"
+    app_user ||--o{ user_achievement : "earns"
+    app_user ||--o{ user_streak : "maintains"
+    app_user ||--o{ user_program_enrollment : "enrolls_in"
+    app_user ||--o{ user_relationship : "follows/followed_by"
+    app_user ||--o{ workout_program : "creates"
+    app_user ||--o{ session_share : "shares"
+    app_user ||--o{ session_comment : "comments"
+    app_user ||--o{ session_like : "likes"
+    app_user }o--|| unit : "prefers_weight_unit"
+    app_user }o--|| unit : "prefers_distance_unit"
+
+    activity_category ||--o{ activity_type : "contains"
+    activity_category ||--o{ workout_program : "categorizes"
+
+    activity_type ||--o{ activity_subtype : "has"
+    activity_type ||--o{ activity_session : "is_type_of"
+    activity_type ||--o{ activity_type_metric_template : "defines_metrics"
+    activity_type ||--o{ user_goal : "target_activity"
+    activity_type ||--o{ user_streak : "tracks_streak"
+    activity_type ||--o{ program_session_template : "defines_session_type"
+
+    activity_subtype ||--o{ activity_session : "is_subtype_of"
+    activity_subtype ||--o{ activity_exercise : "uses"
+    activity_subtype ||--o{ personal_record : "has_pr_for"
+    activity_subtype ||--o{ user_goal : "target_exercise"
+    activity_subtype ||--o{ program_exercise_template : "defines_exercise"
+
+    %% Session & Exercise Tracking
+    activity_session ||--o{ activity_metric : "has_metrics"
+    activity_session ||--o{ activity_exercise : "contains_exercises"
+    activity_session ||--o{ session_media : "has_media"
+    activity_session ||--o{ personal_record : "achieves_pr"
+    activity_session ||--o{ session_share : "can_be_shared"
+    activity_session ||--o{ session_comment : "receives_comments"
+    activity_session ||--o{ session_like : "receives_likes"
+    activity_session ||--o{ user_achievement : "triggers_achievement"
+    activity_session }o--|| activity_session : "duplicated_from_template"
+
+    activity_exercise ||--o{ exercise_set : "has_sets"
+    activity_exercise ||--o{ session_media : "has_form_videos"
+    activity_exercise ||--o{ personal_record : "specific_pr"
+
+    %% Units & Measurements
+    unit ||--o{ activity_type_metric_template : "measures_template"
+    unit ||--o{ activity_metric : "measures_metric"
+    unit ||--o{ exercise_set : "measures_weight"
+    unit ||--o{ user_body_metric : "measures_body"
+    unit ||--o{ user_goal : "measures_target"
+    unit ||--o{ personal_record : "measures_pr"
+    unit ||--o{ body_metric_type : "default_unit"
+
+    %% Goals & Milestones
+    goal_type ||--o{ user_goal : "categorizes"
+    user_goal ||--o{ goal_milestone : "has_milestones"
+
+    %% Body Metrics
+    body_metric_type ||--o{ user_body_metric : "measured_as"
+
+    %% Workout Programs
+    workout_program ||--o{ program_session_template : "contains_sessions"
+    workout_program ||--o{ user_program_enrollment : "enrolled_by"
+
+    program_session_template ||--o{ program_exercise_template : "contains_exercises"
+
+    %% Gamification
+    achievement_type ||--o{ user_achievement : "awarded_as"
+
+    %% Table Definitions
+
+    app_user {
+        int id PK
+        string username UK
+        string email UK
+        string password_hash
+        string first_name
+        string last_name
+        string avatar_url
+        string timezone
+        string measurement_preference
+        int weight_unit_id FK
+        int distance_unit_id FK
+        string date_format
+        string language
+        boolean is_active
+        boolean email_verified
+        timestamp last_login_at
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
 
     activity_category {
         int id PK
-        string name
+        string name UK
         text description
+        string icon_name
+        int display_order
+        timestamp created_at
     }
+
     activity_type {
         int id PK
-        string name
+        string name UK
         int category_id FK
         boolean is_physical
         boolean has_duration
+        boolean has_intensity
+        text description
+        string icon_url
+        timestamp created_at
     }
+
     activity_subtype {
         int id PK
         int activity_type_id FK
         string name
+        text description
+        int default_sets
+        int default_reps
+        decimal default_weight
+        string default_weight_unit
+        array muscle_groups
+        string difficulty_level
+        array equipment_needed
+        text instructions
+        string video_url
+        timestamp created_at
     }
+
     unit {
         int id PK
-        string name
+        string name UK
         string symbol
+        string type
+        decimal conversion_factor
+        boolean is_base_unit
     }
-    app_user {
-        int id PK
-        string username
-    }
+
     activity_session {
         int id PK
         int user_id FK
         int activity_type_id FK
+        int activity_subtype_id FK
+        string session_name
         timestamp started_at
-        int duration_minutes
+        timestamp ended_at
+        int duration_minutes GENERATED
+        string location
+        string weather
+        string mood_before
+        string mood_after
+        int energy_level
+        int rating
+        int perceived_exertion
+        text injuries_noted
+        text notes
+        decimal total_volume
+        decimal estimated_calories
+        boolean is_personal_record
+        boolean is_template
+        string template_name
+        int parent_session_id FK
+        tsvector search_vector
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
     }
+
+    activity_exercise {
+        int id PK
+        int session_id FK
+        int activity_subtype_id FK
+        int exercise_order
+        int superset_group
+        text notes
+        timestamp created_at
+    }
+
+    exercise_set {
+        int id PK
+        int exercise_id FK
+        int set_number
+        int reps
+        decimal weight
+        int weight_unit_id FK
+        int rest_seconds
+        int rpe
+        string tempo
+        boolean is_warmup
+        boolean is_failure
+        boolean is_drop_set
+        string form_video_url
+        text notes
+        timestamp created_at
+    }
+
     activity_metric {
         int id PK
         int session_id FK
         string metric_name
         decimal metric_value_numeric
+        text metric_value_text
         int unit_id FK
+        timestamp created_at
     }
+
     activity_type_metric_template {
         int id PK
         int activity_type_id FK
         string metric_name
         int unit_id FK
+        boolean is_required
+        int display_order
+        string input_type
+        text validation_rule
+        timestamp created_at
+    }
+
+    session_media {
+        int id PK
+        int session_id FK
+        int exercise_id FK
+        string media_type
+        string media_url
+        string thumbnail_url
+        bigint file_size_bytes
+        int duration_seconds
+        text caption
+        array tags
+        boolean is_progress_photo
+        boolean is_form_check
+        timestamp created_at
+    }
+
+    goal_type {
+        int id PK
+        string name UK
+        text description
+        string icon_name
+    }
+
+    user_goal {
+        int id PK
+        int user_id FK
+        int goal_type_id FK
+        int activity_type_id FK
+        int activity_subtype_id FK
+        string title
+        text description
+        decimal target_value
+        int target_unit_id FK
+        decimal current_value
+        date start_date
+        date target_date
+        int frequency_per_week
+        boolean is_completed
+        timestamp completed_at
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    goal_milestone {
+        int id PK
+        int goal_id FK
+        string title
+        decimal target_value
+        timestamp achieved_at
+        boolean is_achieved
+        timestamp created_at
+    }
+
+    personal_record {
+        int id PK
+        int user_id FK
+        int activity_subtype_id FK
+        string record_type
+        decimal record_value
+        int unit_id FK
+        int session_id FK
+        int exercise_id FK
+        decimal previous_record_value
+        timestamp achieved_at
+        text notes
+        timestamp created_at
+    }
+
+    body_metric_type {
+        int id PK
+        string name UK
+        string category
+        int default_unit_id FK
+        text description
+    }
+
+    user_body_metric {
+        int id PK
+        int user_id FK
+        int metric_type_id FK
+        decimal value
+        int unit_id FK
+        timestamp measured_at
+        text notes
+        timestamp created_at
+    }
+
+    workout_program {
+        int id PK
+        int creator_id FK
+        string name
+        text description
+        string difficulty_level
+        int duration_weeks
+        int sessions_per_week
+        int category_id FK
+        boolean is_public
+        boolean is_official
+        array tags
+        string thumbnail_url
+        tsvector search_vector
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    program_session_template {
+        int id PK
+        int program_id FK
+        int week_number
+        int day_number
+        string session_name
+        text description
+        int activity_type_id FK
+        int estimated_duration_minutes
+        int display_order
+        timestamp created_at
+    }
+
+    program_exercise_template {
+        int id PK
+        int session_template_id FK
+        int activity_subtype_id FK
+        int exercise_order
+        int target_sets
+        int target_reps
+        decimal target_weight_pct
+        int rest_seconds
+        text notes
+        timestamp created_at
+    }
+
+    user_program_enrollment {
+        int id PK
+        int user_id FK
+        int program_id FK
+        date start_date
+        int current_week
+        int current_day
+        boolean is_active
+        timestamp completed_at
+        timestamp created_at
+    }
+
+    achievement_type {
+        int id PK
+        string name UK
+        text description
+        string badge_icon_url
+        string category
+        jsonb criteria_json
+        int points
+        string rarity
+        timestamp created_at
+    }
+
+    user_achievement {
+        int id PK
+        int user_id FK
+        int achievement_type_id FK
+        timestamp earned_at
+        int related_session_id FK
+        decimal progress_value
+        timestamp created_at
+    }
+
+    user_streak {
+        int id PK
+        int user_id FK
+        int activity_type_id FK
+        int current_streak_days
+        int longest_streak_days
+        date last_activity_date
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    user_relationship {
+        int id PK
+        int follower_id FK
+        int following_id FK
+        timestamp created_at
+    }
+
+    session_share {
+        int id PK
+        int session_id FK
+        int shared_by_user_id FK
+        string visibility
+        text share_message
+        timestamp created_at
+    }
+
+    session_comment {
+        int id PK
+        int session_id FK
+        int user_id FK
+        text comment_text
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    session_like {
+        int id PK
+        int session_id FK
+        int user_id FK
+        timestamp created_at
     }
