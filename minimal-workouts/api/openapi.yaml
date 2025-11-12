@@ -1,0 +1,680 @@
+openapi: 3.0.3
+info:
+  title: Weight Training Workout Tracker API
+  description: Minimal API for tracking weight training workouts
+  version: 1.0.0
+  contact:
+    name: Workout Tracker Team
+
+servers:
+  - url: https://api.workout-tracker.com/v1
+    description: Production server
+  - url: http://localhost:3000/v1
+    description: Development server
+
+security:
+  - bearerAuth: []
+
+paths:
+  # Authentication
+  /auth/login:
+    post:
+      summary: User login
+      description: Authenticate user and return access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: john.doe@example.com
+                password:
+                  type: string
+                  example: "password123"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+
+  # Users CRUD
+  /users:
+    post:
+      summary: Create a new user
+      description: Register a new user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                  example: "John Doe"
+                email:
+                  type: string
+                  format: email
+                  example: "john.doe@example.com"
+                password:
+                  type: string
+                  example: "password123"
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid input
+        '409':
+          description: Email already exists
+
+    get:
+      summary: List all users
+      description: Retrieve a list of all users (admin only)
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  total:
+                    type: integer
+                    example: 25
+
+  /users/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          example: 1
+    get:
+      summary: Get user by ID
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+    put:
+      summary: Update user
+      description: Update user information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "John Smith"
+                email:
+                  type: string
+                  format: email
+                  example: "john.smith@example.com"
+                password:
+                  type: string
+                  example: "newpassword123"
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid input
+        '404':
+          description: User not found
+    delete:
+      summary: Delete user
+      responses:
+        '204':
+          description: User deleted successfully
+        '404':
+          description: User not found
+
+  # Workout Types CRUD
+  /workout-types:
+    post:
+      summary: Create workout type
+      description: Create a new workout type
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  example: "Bench Press"
+                description:
+                  type: string
+                  example: "Chest exercise performed lying on a bench"
+      responses:
+        '201':
+          description: Workout type created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutType'
+        '400':
+          description: Invalid input
+        '409':
+          description: Workout type name already exists
+
+    get:
+      summary: List workout types
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of workout types
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  workout_types:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WorkoutType'
+                  total:
+                    type: integer
+
+  /workout-types/{workoutTypeId}:
+    parameters:
+      - name: workoutTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          example: 1
+    get:
+      summary: Get workout type by ID
+      responses:
+        '200':
+          description: Workout type details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutType'
+        '404':
+          description: Workout type not found
+    put:
+      summary: Update workout type
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Incline Bench Press"
+                description:
+                  type: string
+                  example: "Chest exercise on an inclined bench"
+      responses:
+        '200':
+          description: Workout type updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutType'
+        '400':
+          description: Invalid input
+        '404':
+          description: Workout type not found
+        '409':
+          description: Name already exists
+    delete:
+      summary: Delete workout type
+      responses:
+        '204':
+          description: Workout type deleted
+        '404':
+          description: Workout type not found
+
+  # Sessions CRUD
+  /sessions:
+    post:
+      summary: Create session
+      description: Create a new workout session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - session_date
+              properties:
+                session_date:
+                  type: string
+                  format: date
+                  example: "2025-11-11"
+                notes:
+                  type: string
+                  example: "Upper body workout"
+      responses:
+        '201':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '400':
+          description: Invalid input
+
+    get:
+      summary: List sessions
+      description: Get sessions for the authenticated user
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Session'
+                  total:
+                    type: integer
+
+  /sessions/{sessionId}:
+    parameters:
+      - name: sessionId
+        in: path
+        required: true
+        schema:
+          type: integer
+          example: 1
+    get:
+      summary: Get session by ID
+      responses:
+        '200':
+          description: Session details with workouts
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Session'
+                  - type: object
+                    properties:
+                      workouts:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Workout'
+        '404':
+          description: Session not found
+    put:
+      summary: Update session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                session_date:
+                  type: string
+                  format: date
+                  example: "2025-11-12"
+                notes:
+                  type: string
+                  example: "Updated notes"
+      responses:
+        '200':
+          description: Session updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '400':
+          description: Invalid input
+        '404':
+          description: Session not found
+    delete:
+      summary: Delete session
+      responses:
+        '204':
+          description: Session deleted
+        '404':
+          description: Session not found
+
+  # Workouts CRUD
+  /workouts:
+    post:
+      summary: Create workout
+      description: Add a workout to a session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - session_id
+                - workout_type_id
+                - sets
+                - reps
+                - weight
+                - weight_unit
+              properties:
+                session_id:
+                  type: integer
+                  example: 1
+                workout_type_id:
+                  type: integer
+                  example: 1
+                sets:
+                  type: integer
+                  example: 4
+                reps:
+                  type: integer
+                  example: 8
+                weight:
+                  type: number
+                  example: 185.5
+                weight_unit:
+                  type: string
+                  enum: [kg, lbs]
+                  example: "lbs"
+      responses:
+        '201':
+          description: Workout created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workout'
+        '400':
+          description: Invalid input
+        '404':
+          description: Session or workout type not found
+
+    get:
+      summary: List workouts
+      description: Get workouts, optionally filtered by session
+      parameters:
+        - name: session_id
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of workouts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  workouts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Workout'
+                  total:
+                    type: integer
+
+  /workouts/{workoutId}:
+    parameters:
+      - name: workoutId
+        in: path
+        required: true
+        schema:
+          type: integer
+          example: 1
+    get:
+      summary: Get workout by ID
+      responses:
+        '200':
+          description: Workout details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workout'
+        '404':
+          description: Workout not found
+    put:
+      summary: Update workout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sets:
+                  type: integer
+                  example: 5
+                reps:
+                  type: integer
+                  example: 10
+                weight:
+                  type: number
+                  example: 195.0
+                weight_unit:
+                  type: string
+                  enum: [kg, lbs]
+                  example: "lbs"
+      responses:
+        '200':
+          description: Workout updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workout'
+        '400':
+          description: Invalid input
+        '404':
+          description: Workout not found
+    delete:
+      summary: Delete workout
+      responses:
+        '204':
+          description: Workout deleted
+        '404':
+          description: Workout not found
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-11-11T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2025-11-11T10:00:00Z"
+
+    WorkoutType:
+      type: object
+      properties:
+        workout_type_id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Bench Press"
+        description:
+          type: string
+          example: "Chest exercise performed lying on a bench"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-11-11T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2025-11-11T10:00:00Z"
+
+    Session:
+      type: object
+      properties:
+        session_id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        session_date:
+          type: string
+          format: date
+          example: "2025-11-11"
+        notes:
+          type: string
+          example: "Upper body workout"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-11-11T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2025-11-11T10:00:00Z"
+
+    Workout:
+      type: object
+      properties:
+        workout_id:
+          type: integer
+          example: 1
+        session_id:
+          type: integer
+          example: 1
+        workout_type_id:
+          type: integer
+          example: 1
+        sets:
+          type: integer
+          example: 4
+        reps:
+          type: integer
+          example: 8
+        weight:
+          type: number
+          example: 185.5
+        weight_unit:
+          type: string
+          enum: [kg, lbs]
+          example: "lbs"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-11-11T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2025-11-11T10:00:00Z"
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

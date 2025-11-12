@@ -1,0 +1,42 @@
+erDiagram
+    users ||--o{ sessions : "has"
+    sessions ||--o{ workouts : "contains"
+    workout_types ||--o{ workouts : "categorizes"
+
+    users {
+        bigint user_id PK
+        varchar name
+        varchar email
+        varchar password_hash
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    workout_types {
+        bigint workout_type_id PK
+        varchar name
+        text description
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    sessions {
+        bigint session_id PK
+        bigint user_id FK
+        date session_date
+        text notes
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    workouts {
+        bigint workout_id PK
+        bigint session_id FK
+        bigint workout_type_id FK
+        integer sets
+        integer reps
+        decimal weight
+        varchar weight_unit
+        timestamp created_at
+        timestamp updated_at
+    }

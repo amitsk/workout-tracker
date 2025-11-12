@@ -149,7 +149,7 @@ erDiagram
         string session_name
         timestamp started_at
         timestamp ended_at
-        int duration_minutes GENERATED
+        int duration_minutes
         string location
         string weather
         string mood_before
@@ -165,7 +165,7 @@ erDiagram
         boolean is_template
         string template_name
         int parent_session_id FK
-        tsvector search_vector
+        string search_vector
         timestamp created_at
         timestamp updated_at
         timestamp deleted_at
@@ -322,7 +322,7 @@ erDiagram
         boolean is_official
         array tags
         string thumbnail_url
-        tsvector search_vector
+        string search_vector
         timestamp created_at
         timestamp updated_at
         timestamp deleted_at
