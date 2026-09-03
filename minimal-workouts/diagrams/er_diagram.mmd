@@ -1,42 +1,56 @@
 erDiagram
     users ||--o{ sessions : "has"
+    users ||--o{ workout_types : "creates_custom"
     sessions ||--o{ workouts : "contains"
     workout_types ||--o{ workouts : "categorizes"
+    workouts ||--o{ workout_sets : "logged_as"
 
     users {
         bigint user_id PK
         varchar name
-        varchar email
+        varchar email UK
         varchar password_hash
-        timestamp created_at
-        timestamp updated_at
+        timestamptz created_at
+        timestamptz updated_at
     }
 
     workout_types {
         bigint workout_type_id PK
+        bigint user_id FK
         varchar name
         text description
-        timestamp created_at
-        timestamp updated_at
+        timestamptz created_at
+        timestamptz updated_at
     }
 
     sessions {
         bigint session_id PK
         bigint user_id FK
-        date session_date
+        timestamptz started_at
+        timestamptz ended_at
         text notes
-        timestamp created_at
-        timestamp updated_at
+        timestamptz created_at
+        timestamptz updated_at
     }
 
     workouts {
         bigint workout_id PK
         bigint session_id FK
         bigint workout_type_id FK
-        integer sets
+        integer display_order
+        text notes
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    workout_sets {
+        bigint workout_set_id PK
+        bigint workout_id FK
+        integer set_number
         integer reps
-        decimal weight
+        numeric weight
         varchar weight_unit
-        timestamp created_at
-        timestamp updated_at
+        boolean is_warmup
+        timestamptz created_at
+        timestamptz updated_at
     }
