@@ -1,8 +1,10 @@
 {
   "session_id": 1,
   "workout_type_id": 1,
-  "sets": 4,
-  "reps": 8,
-  "weight": 185.5,
-  "weight_unit": "lbs"
+  "display_order": 0,
+  "sets": [
+    { "set_number": 1, "reps": 8, "weight": 185.5, "weight_unit": "lbs" },
+    { "set_number": 2, "reps": 8, "weight": 185.5, "weight_unit": "lbs" },
+    { "set_number": 3, "reps": 6, "weight": 195, "weight_unit": "lbs" }
+  ]
 }

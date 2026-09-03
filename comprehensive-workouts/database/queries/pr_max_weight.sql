@@ -1,10 +1,18 @@
--- PR: Max weight for Bench Press
-SELECT 
-    s.id, s.started_at, m1.metric_value_numeric AS weight_kg
-FROM activity_session s
-JOIN activity_metric m1 ON s.id = m1.session_id AND m1.metric_name = 'weight'
-JOIN activity_subtype st ON s.activity_subtype_id = st.id
+-- PR: max working-set weight for Bench Press
+-- Uses exercise_set (schema v2), not the EAV activity_metric table.
+SELECT
+    s.id AS session_id,
+    s.started_at,
+    st.name AS exercise,
+    es.weight,
+    u.symbol AS unit
+FROM exercise_set es
+JOIN activity_exercise ae ON ae.id = es.exercise_id
+JOIN activity_session s ON s.id = ae.session_id
+JOIN activity_subtype st ON st.id = ae.activity_subtype_id
+LEFT JOIN unit u ON u.id = es.weight_unit_id
 WHERE st.name = 'Bench Press'
-  AND m1.unit_id = (SELECT id FROM unit WHERE name = 'kilograms')
-ORDER BY m1.metric_value_numeric DESC
+  AND es.weight IS NOT NULL
+  AND s.deleted_at IS NULL
+ORDER BY es.weight DESC, s.started_at DESC
 LIMIT 1;
